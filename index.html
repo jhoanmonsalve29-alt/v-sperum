@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>vésperum — Rendimiento y estilo</title>
+  <meta name="description" content="vésperum: equipamiento deportivo de alto rendimiento con diseño minimalista." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="index.html">vésperum</a>
+    <nav class="nav">
+      <div class="nav-item has-mega">
+        <button class="nav-trigger">Hombre</button>
+        <div class="mega">
+          <div>
+            <h4>Calzado</h4>
+            <a href="catalogo.html?genero=hombre&cat=running">Running</a>
+            <a href="catalogo.html?genero=hombre&cat=training">Training</a>
+            <a href="catalogo.html?genero=hombre&cat=lifestyle">Lifestyle</a>
+          </div>
+          <div>
+            <h4>Ropa</h4>
+            <a href="catalogo.html?genero=hombre&cat=camisetas">Camisetas</a>
+            <a href="catalogo.html?genero=hombre&cat=shorts">Shorts</a>
+            <a href="catalogo.html?genero=hombre&cat=chaquetas">Chaquetas</a>
+          </div>
+          <div>
+            <h4>Accesorios</h4>
+            <a href="catalogo.html?genero=hombre&cat=bolsos">Bolsos</a>
+            <a href="catalogo.html?genero=hombre&cat=gorras">Gorras</a>
+            <a href="catalogo.html?genero=hombre&cat=medias">Medias</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-item has-mega">
+        <button class="nav-trigger">Mujer</button>
+        <div class="mega">
+          <div>
+            <h4>Calzado</h4>
+            <a href="catalogo.html?genero=mujer&cat=running">Running</a>
+            <a href="catalogo.html?genero=mujer&cat=training">Training</a>
+            <a href="catalogo.html?genero=mujer&cat=lifestyle">Lifestyle</a>
+          </div>
+          <div>
+            <h4>Ropa</h4>
+            <a href="catalogo.html?genero=mujer&cat=camisetas">Camisetas</a>
+            <a href="catalogo.html?genero=mujer&cat=leggings">Leggings</a>
+            <a href="catalogo.html?genero=mujer&cat=chaquetas">Chaquetas</a>
+          </div>
+          <div>
+            <h4>Accesorios</h4>
+            <a href="catalogo.html?genero=mujer&cat=bolsos">Bolsos</a>
+            <a href="catalogo.html?genero=mujer&cat=gorras">Gorras</a>
+            <a href="catalogo.html?genero=mujer&cat=medias">Medias</a>
+          </div>
+        </div>
+      </div>
+      <a class="nav-item" href="novedades.html">Novedades</a>
+      <a class="nav-item" href="contacto.html">Contacto</a>
+    </nav>
+    <div class="actions">
+      <input id="search" class="search" type="search" placeholder="Buscar productos..." />
+      <a class="icon-btn" href="checkout.html">🛒 <span id="cartCount">0</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Corre hacia tu mejor versión</h1>
+        <p>Textiles técnicos, amortiguación inteligente y diseño atemporal.</p>
+        <a class="btn" href="catalogo.html?cat=running">Ver colección Running</a>
+      </div>
+      <picture>
+        <img src="media/hero-running.jpg" alt="Zapatillas vésperum para correr" />
+      </picture>
+    </section>
+
+    <section class="featured">
+      <div class="section-head">
+        <h2>Destacados</h2>
+        <a href="catalogo.html">Ver todo</a>
+      </div>
+      <div id="featuredGrid" class="product-grid"></div>
+    </section>
+
+    <section class="news">
+      <div class="section-head">
+        <h2>Novedades</h2>
+        <a href="novedades.html">Ver más</a>
+      </div>
+      <div id="newsGrid" class="news-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="cols">
+      <div>
+        <h4>Ayuda</h4>
+        <a href="envios.html">Envíos y entregas</a>
+        <a href="devoluciones.html">Devoluciones</a>
+        <a href="tallas.html">Guía de tallas</a>
+      </div>
+      <div>
+        <h4>Empresa</h4>
+        <a href="sobre.html">Sobre vésperum</a>
+        <a href="sostenibilidad.html">Sostenibilidad</a>
+        <a href="tiendas.html">Tiendas</a>
+      </div>
+      <div>
+        <h4>Suscríbete</h4>
+        <form id="newsletterForm">
+          <input type="email" placeholder="Tu email" required />
+          <button class="btn" type="submit">Unirme</button>
+        </form>
+      </div>
+    </div>
+    <div class="footbar">
+      <small>© vésperum. Todos los derechos reservados.</small>
+      <div class="socials">
+        <a aria-label="Instagram" href="#">IG</a>
+        <a aria-label="YouTube" href="#">YT</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
