@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — vésperum</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="index.html">vésperum</a>
+    <nav class="nav">
+      <a class="nav-item" href="catalogo.html">Catálogo</a>
+      <a class="nav-item" href="novedades.html">Novedades</a>
+      <a class="nav-item" href="contacto.html">Contacto</a>
+    </nav>
+    <div class="actions">
+      <a class="icon-btn" href="checkout.html">🛒 <span id="cartCount">0</span></a>
+    </div>
+  </header>
+
+  <main class="checkout" style="padding:24px">
+    <h1>Finalizar compra</h1>
+    <form id="checkoutForm">
+      <section>
+        <h3>Envío</h3>
+        <input name="nombre" placeholder="Nombre completo" required />
+        <input name="direccion" placeholder="Dirección" required />
+        <input name="ciudad" placeholder="Ciudad" required />
+        <input name="postal" placeholder="Código postal" required />
+        <input name="telefono" placeholder="Teléfono" required />
+      </section>
+      <section>
+        <h3>Resumen</h3>
+        <div id="orderSummary"></div>
+      </section>
+      <section>
+        <h3>Pago</h3>
+        <div id="payment-element">
+          <p style="color:var(--muted)">Integra aquí tu proveedor de pagos (Stripe, PayPal, etc.).</p>
+        </div>
+      </section>
+      <button class="btn" type="submit">Pagar</button>
+      <p id="status" style="color:var(--muted); margin-top:8px"></p>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <div class="footbar">
+      <small>© vésperum.</small>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>
