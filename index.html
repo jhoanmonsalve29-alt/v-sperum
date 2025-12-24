@@ -1,0 +1,787 @@
+# =========================
+# 0) Crear el proyecto base
+# =========================
+npx create-next-app@latest vesperum \
+  --ts \
+  --eslint \
+  --tailwind \
+  --src-dir \
+  --app \
+  --import-alias "@/*"
+
+cd vesperum
+
+# ==============================
+# 1) Instalar dependencias extra
+# ==============================
+npm i @prisma/client prisma zustand stripe next-auth framer-motion react-medium-image-zoom bcrypt
+npm i -D @types/bcrypt
+
+# ======================
+# 2) Variables de entorno
+# ======================
+cat > .env << 'EOF'
+# Base
+NEXT_PUBLIC_URL=http://localhost:3000
+
+# Database (PostgreSQL)
+DATABASE_URL="postgresql://usuario:password@localhost:5432/vesperum?schema=public"
+
+# Stripe
+STRIPE_SECRET_KEY="sk_test_xxx"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="supersecretogenerado"
+
+# Opcional: API pública si la usas en fetch
+NEXT_PUBLIC_API_URL="http://localhost:3000/api"
+EOF
+
+# ======================================
+# 3) Inicializar Prisma y definir schema
+# ======================================
+npx prisma init
+
+cat > prisma/schema.prisma << 'EOF'
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  role      Role     @default(CUSTOMER)
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  brand       String
+  category    String
+  price       Decimal  @db.Decimal(10,2)
+  currency    String   @default("USD")
+  stock       Int
+  images      Json
+  specs       Json
+  tags        String[]
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  items       Json
+  subtotal    Decimal    @db.Decimal(10,2)
+  tax         Decimal    @db.Decimal(10,2)
+  shipping    Decimal    @db.Decimal(10,2)
+  total       Decimal    @db.Decimal(10,2)
+  status      OrderStatus @default(PENDING)
+  stripeId    String?
+  createdAt   DateTime   @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  CANCELED
+}
+EOF
+
+npx prisma migrate dev --name init
+npx prisma generate
+
+# ===========================================
+# 4) Tailwind: extender tema con paleta VÉSPERUM
+# ===========================================
+cat > tailwind.config.ts << 'EOF'
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: ["./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          primary: "#0F3D3A",
+          accent:  "#DAC9A6",
+          neon:    "#00FFA3",
+          dark:    "#0B0B0B",
+          graphite:"#1E1E1E",
+        },
+      },
+      boxShadow: {
+        subtle: "0 8px 24px rgba(0,0,0,0.25)",
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;
+EOF
+
+# ===================================================
+# 5) Estilos globales con base minimalista y premium
+# ===================================================
+cat > src/app/globals.css << 'EOF'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: #0B0B0B;
+  color: #fff;
+}
+
+.container {
+  @apply max-w-7xl mx-auto;
+}
+EOF
+
+# =========================================
+# 6) Layout base con Navbar y branding tech
+# =========================================
+mkdir -p public
+# Placeholder del logo (reemplázalo con tu asset real)
+# Puedes reemplazar luego /logo-vesperum.png por tu PNG/SVG
+curl -s https://dummyimage.com/256x256/0f3d3a/dac9a6.png&text=V | sed 's/$//' > public/logo-vesperum.png || touch public/logo-vesperum.png
+
+mkdir -p src/components
+cat > src/components/Navbar.tsx << 'EOF'
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  return (
+    <header className="sticky top-0 z-50 bg-brand.dark/80 backdrop-blur border-b border-brand.graphite">
+      <div className="container px-4 py-3 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-3">
+          <Image src="/logo-vesperum.png" alt="VÉSPERUM" width={36} height={36} className="rounded-md" />
+          <span className="font-semibold tracking-wide">VÉSPERUM</span>
+        </Link>
+        <nav className="hidden md:flex items-center gap-6">
+          <Link href="/productos" className="hover:text-brand.accent transition">Productos</Link>
+          <Link href="/novedades" className="hover:text-brand.accent transition">Novedades</Link>
+          <Link href="/carrito" className="px-3 py-1 rounded-md bg-brand.primary hover:bg-teal-700 transition">Carrito</Link>
+        </nav>
+        <button className="md:hidden" onClick={() => setOpen(v => !v)}>☰</button>
+      </div>
+      {open && (
+        <div className="md:hidden border-t border-brand.graphite px-4 py-3 space-y-2">
+          <Link href="/productos">Productos</Link>
+          <Link href="/novedades">Novedades</Link>
+          <Link href="/carrito">Carrito</Link>
+        </div>
+      )}
+    </header>
+  );
+}
+EOF
+
+cat > src/app/layout.tsx << 'EOF'
+import type { Metadata } from "next";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+
+export const metadata: Metadata = {
+  title: "VÉSPERUM — Lo más alto, en un solo lugar",
+  description: "eCommerce tecnológico con diseño minimalista premium.",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es">
+      <body>
+        <Navbar />
+        {children}
+      </body>
+    </html>
+  );
+}
+EOF
+
+# ==========================
+# 7) Home impactante (hero)
+# ==========================
+cat > src/app/page.tsx << 'EOF'
+import Image from "next/image";
+import Link from "next/link";
+
+export default function Home() {
+  return (
+    <main className="min-h-screen">
+      <section className="relative h-[85vh] flex items-center justify-center">
+        <div className="absolute top-8 left-8">
+          <Image src="/logo-vesperum.png" alt="VÉSPERUM" width={64} height={64} className="drop-shadow-lg" />
+        </div>
+        <div className="text-center max-w-3xl px-6">
+          <h1 className="text-5xl md:text-6xl font-semibold tracking-wide">VÉSPERUM</h1>
+          <p className="mt-3 text-lg md:text-xl text-brand.accent">Lo más alto, en un solo lugar.</p>
+          <div className="mt-8 flex gap-4 justify-center">
+            <Link href="/productos" className="px-6 py-3 rounded-md bg-brand.primary hover:bg-teal-700 transition">
+              Comprar ahora
+            </Link>
+            <Link href="/novedades" className="px-6 py-3 rounded-md border border-brand.accent hover:bg-white/10 transition">
+              Novedades
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+EOF
+
+# ===============================================
+# 8) Estado global del carrito (Zustand básico)
+# ===============================================
+mkdir -p src/store
+cat > src/store/cart.ts << 'EOF'
+import { create } from "zustand";
+
+export type CartItem = { id: string; name: string; price: number; qty: number; image: string };
+
+type CartState = {
+  items: CartItem[];
+  add: (p: CartItem) => void;
+  remove: (id: string) => void;
+  setQty: (id: string, qty: number) => void;
+  clear: () => void;
+};
+
+export const useCart = create<CartState>((set) => ({
+  items: [],
+  add: (p) => set(s => {
+    const exists = s.items.find(i => i.id === p.id);
+    return { items: exists ? s.items.map(i => i.id===p.id ? {...i, qty: i.qty + p.qty} : i) : [...s.items, p] };
+  }),
+  remove: (id) => set(s => ({ items: s.items.filter(i => i.id !== id) })),
+  setQty: (id, qty) => set(s => ({ items: s.items.map(i => i.id===id ? {...i, qty} : i) })),
+  clear: () => set({ items: [] }),
+}));
+EOF
+
+# ==========================================
+# 9) Componentes de producto y filtros UI
+# ==========================================
+cat > src/components/ProductCard.tsx << 'EOF'
+import Image from "next/image";
+import Link from "next/link";
+
+export default function ProductCard({ product }: any) {
+  return (
+    <Link href={`/productos/${product.slug}`} className="group block bg-brand.dark border border-brand.graphite rounded-xl overflow-hidden">
+      <div className="relative aspect-square">
+        <Image
+          src={product.images?.[0] ?? "/logo-vesperum.png"}
+          alt={product.name}
+          fill
+          sizes="(max-width:768px) 50vw, 25vw"
+          className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="text-white">{product.name}</h3>
+        <p className="text-sm text-brand.accent">{product.brand}</p>
+        <p className="mt-2 text-brand.neon">${product.price}</p>
+      </div>
+    </Link>
+  );
+}
+EOF
+
+cat > src/components/Filters.tsx << 'EOF'
+export default function Filters({ value, onChange }: any) {
+  return (
+    <div className="flex flex-wrap gap-4 items-end bg-[#111] p-4 rounded-lg">
+      <div className="flex-1 min-w-[180px]">
+        <label className="block text-sm text-brand.accent">Categoría</label>
+        <select
+          className="mt-1 w-full bg-brand.dark border border-brand.graphite rounded-md p-2"
+          value={value.category}
+          onChange={e => onChange({ ...value, category: e.target.value })}
+        >
+          <option value="">Todas</option>
+          <option value="smartphones">Smartphones</option>
+          <option value="wearables">Wearables</option>
+          <option value="computo">Cómputo</option>
+        </select>
+      </div>
+      <div className="flex-1 min-w-[180px]">
+        <label className="block text-sm text-brand.accent">Precio máx.</label>
+        <input
+          type="number"
+          className="mt-1 w-full bg-brand.dark border border-brand.graphite rounded-md p-2"
+          value={value.max}
+          onChange={e => onChange({ ...value, max: Number(e.target.value) })}
+        />
+      </div>
+      <div className="flex-1 min-w-[220px]">
+        <label className="block text-sm text-brand.accent">Tecnologías</label>
+        <div className="flex gap-2 mt-1">
+          {["5G","AI","Edge","OLED"].map(tag => (
+            <button
+              key={tag}
+              onClick={() => {
+                const next = value.tags.includes(tag)
+                  ? value.tags.filter((t: string) => t !== tag)
+                  : [...value.tags, tag];
+                onChange({ ...value, tags: next });
+              }}
+              className={`px-3 py-1 rounded-md border ${value.tags.includes(tag) ? "bg-brand.primary border-teal-700" : "border-brand.graphite"}`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+EOF
+
+# ============================================
+# 10) Rutas: catálogo, detalle, carrito, checkout
+# ============================================
+mkdir -p src/app/productos src/app/productos/[slug] src/app/novedades src/app/carrito src/app/checkout
+
+cat > src/app/productos/page.tsx << 'EOF'
+"use client";
+import { useEffect, useState } from "react";
+import ProductCard from "@/components/ProductCard";
+import Filters from "@/components/Filters";
+
+export default function CatalogPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [query, setQuery] = useState({ category: "", brand: "", min: 0, max: 5000, tags: [] as string[] });
+
+  useEffect(() => {
+    const url = new URL("/api/products", window.location.origin);
+    Object.entries(query).forEach(([k, v]) => {
+      if (Array.isArray(v)) v.forEach(t => url.searchParams.append(k, t as string));
+      else if (v !== "" && v !== 0) url.searchParams.set(k, String(v));
+    });
+    fetch(url.toString()).then(res => res.json()).then(setProducts);
+  }, [query]);
+
+  return (
+    <div className="container px-4 py-8">
+      <h1 className="text-2xl">Productos</h1>
+      <Filters value={query} onChange={setQuery} />
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+        {products.map(p => <ProductCard key={p.id} product={p} />)}
+      </div>
+    </div>
+  );
+}
+EOF
+
+cat > src/app/productos/[slug]/page.tsx << 'EOF'
+import Image from "next/image";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
+import AddToCart from "@/components/AddToCart";
+
+async function getProduct(slug: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`, { cache: "no-store" });
+  return res.json();
+}
+
+export default async function ProductDetail({ params }: { params: { slug: string } }) {
+  const product = await getProduct(params.slug);
+
+  return (
+    <div className="container px-4 py-8 grid md:grid-cols-2 gap-8">
+      <div>
+        <Zoom>
+          <Image src={product.images?.[0] ?? "/logo-vesperum.png"} alt={product.name} width={800} height={800} className="rounded-xl" />
+        </Zoom>
+        <div className="grid grid-cols-4 gap-3 mt-3">
+          {(product.images ?? []).slice(1,5).map((img: string, i: number) => (
+            <Image key={i} src={img} alt={`${product.name}-${i}`} width={200} height={200} className="rounded-lg" />
+          ))}
+        </div>
+      </div>
+      <div>
+        <h1 className="text-3xl">{product.name}</h1>
+        <p className="text-brand.accent">{product.brand}</p>
+        <p className="mt-4 text-2xl text-brand.neon">${product.price}</p>
+        <ul className="mt-6 space-y-2 text-sm text-gray-300">
+          {Object.entries(product.specs ?? {}).map(([k,v]: any) => (
+            <li key={k}><span className="text-brand.accent">{k}:</span> {String(v)}</li>
+          ))}
+        </ul>
+        <div className="mt-8">
+          <AddToCart product={product} />
+        </div>
+      </div>
+    </div>
+  );
+}
+EOF
+
+cat > src/components/AddToCart.tsx << 'EOF'
+"use client";
+import { useCart } from "@/store/cart";
+
+export default function AddToCart({ product }: any) {
+  const { add } = useCart();
+  return (
+    <button
+      onClick={() => add({ id: product.id, name: product.name, price: Number(product.price), qty: 1, image: product.images?.[0] ?? "" })}
+      className="px-6 py-3 rounded-md bg-brand.primary hover:bg-teal-700 transition"
+    >
+      Añadir al carrito
+    </button>
+  );
+}
+EOF
+
+cat > src/app/carrito/page.tsx << 'EOF'
+"use client";
+import { useCart } from "@/store/cart";
+import Link from "next/link";
+
+export default function CartPage() {
+  const { items, remove, setQty } = useCart();
+  const total = items.reduce((acc, i) => acc + i.price * i.qty, 0);
+
+  return (
+    <div className="container px-4 py-8">
+      <h1 className="text-2xl">Carrito</h1>
+      <div className="mt-4 bg-brand.dark border border-brand.graphite rounded-xl p-4 space-y-3">
+        {items.length === 0 && <p className="text-gray-400">Tu carrito está vacío.</p>}
+        {items.map(i => (
+          <div key={i.id} className="flex items-center justify-between gap-3">
+            <span>{i.name}</span>
+            <div className="flex items-center gap-2">
+              <input type="number" min={1} value={i.qty} onChange={(e) => setQty(i.id, Number(e.target.value))}
+                className="w-16 bg-brand.dark border border-brand.graphite rounded-md p-1" />
+              <button onClick={() => remove(i.id)} className="text-red-300 hover:text-red-400">Eliminar</button>
+            </div>
+            <span>${(i.price * i.qty).toFixed(2)}</span>
+          </div>
+        ))}
+        {items.length > 0 && (
+          <>
+            <div className="mt-2 flex justify-between text-brand.accent">
+              <span>Total</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+            <Link href="/checkout" className="mt-4 inline-block px-6 py-3 rounded-md bg-brand.primary hover:bg-teal-700 transition">
+              Ir al pago
+            </Link>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+EOF
+
+cat > src/app/checkout/page.tsx << 'EOF'
+"use client";
+import { useCart } from "@/store/cart";
+
+export default function Checkout() {
+  const { items } = useCart();
+
+  async function handleStripeCheckout() {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+    const { url } = await res.json();
+    window.location.href = url;
+  }
+
+  const total = items.reduce((acc, i) => acc + i.price * i.qty, 0);
+
+  return (
+    <div className="container px-4 py-8">
+      <h1 className="text-2xl">Checkout</h1>
+      <div className="mt-4 bg-brand.dark border border-brand.graphite rounded-xl p-4">
+        {items.map(i => (
+          <div key={i.id} className="flex justify-between text-gray-200">
+            <span>{i.name} × {i.qty}</span>
+            <span>${(i.price * i.qty).toFixed(2)}</span>
+          </div>
+        ))}
+        <div className="mt-4 flex justify-between text-brand.accent">
+          <span>Total</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+        <button onClick={handleStripeCheckout} className="mt-6 w-full px-6 py-3 rounded-md bg-brand.primary hover:bg-teal-700 transition">
+          Pagar con Stripe
+        </button>
+      </div>
+    </div>
+  );
+}
+EOF
+
+cat > src/app/novedades/page.tsx << 'EOF'
+export default function Novedades() {
+  return (
+    <div className="container px-4 py-8">
+      <h1 className="text-2xl">Novedades</h1>
+      <p className="mt-2 text-gray-300">Noticias, lanzamientos y tecnología detrás del catálogo.</p>
+    </div>
+  );
+}
+EOF
+
+# ==========================================
+# 11) API: productos y detalle por slug (mock)
+# ==========================================
+mkdir -p src/app/api/products src/app/api/products/[slug]
+cat > src/app/api/products/route.ts << 'EOF'
+import { NextResponse } from "next/server";
+
+const MOCK = [
+  {
+    id: "p1",
+    slug: "smartphone-neo-5g",
+    name: "Smartphone NEO 5G",
+    brand: "VÉSPERUM Labs",
+    category: "smartphones",
+    price: 899,
+    currency: "USD",
+    stock: 12,
+    images: ["/logo-vesperum.png"],
+    specs: { CPU: "Octa-core", RAM: "12GB", Display: "OLED 120Hz", Network: "5G" },
+    tags: ["5G","AI","OLED"],
+    isFeatured: true,
+  },
+  {
+    id: "p2",
+    slug: "watch-quantum",
+    name: "Watch Quantum",
+    brand: "VÉSPERUM",
+    category: "wearables",
+    price: 399,
+    currency: "USD",
+    stock: 22,
+    images: ["/logo-vesperum.png"],
+    specs: { Sensors: "PPG, SpO2", Battery: "72h", Water: "5ATM" },
+    tags: ["Edge"],
+    isFeatured: false,
+  },
+];
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const category = searchParams.get("category");
+  const max = Number(searchParams.get("max") ?? 0);
+  const tags = searchParams.getAll("tags");
+
+  let result = MOCK;
+  if (category) result = result.filter(p => p.category === category);
+  if (max) result = result.filter(p => p.price <= max);
+  if (tags.length) result = result.filter(p => tags.every(t => p.tags.includes(t)));
+
+  return NextResponse.json(result);
+}
+EOF
+
+cat > src/app/api/products/[slug]/route.ts << 'EOF'
+import { NextResponse } from "next/server";
+
+const MOCK = [
+  {
+    id: "p1",
+    slug: "smartphone-neo-5g",
+    name: "Smartphone NEO 5G",
+    brand: "VÉSPERUM Labs",
+    category: "smartphones",
+    price: 899,
+    currency: "USD",
+    stock: 12,
+    images: ["/logo-vesperum.png"],
+    specs: { CPU: "Octa-core", RAM: "12GB", Display: "OLED 120Hz", Network: "5G" },
+    tags: ["5G","AI","OLED"],
+    isFeatured: true,
+  },
+  {
+    id: "p2",
+    slug: "watch-quantum",
+    name: "Watch Quantum",
+    brand: "VÉSPERUM",
+    category: "wearables",
+    price: 399,
+    currency: "USD",
+    stock: 22,
+    images: ["/logo-vesperum.png"],
+    specs: { Sensors: "PPG, SpO2", Battery: "72h", Water: "5ATM" },
+    tags: ["Edge"],
+    isFeatured: false,
+  },
+];
+
+export async function GET(_: Request, { params }: { params: { slug: string } }) {
+  const product = MOCK.find(p => p.slug === params.slug);
+  if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(product);
+}
+EOF
+
+# ======================================
+# 12) API: checkout con Stripe Checkout
+# ======================================
+mkdir -p src/app/api/checkout
+cat > src/app/api/checkout/route.ts << 'EOF'
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export async function POST(req: Request) {
+  const { items } = await req.json();
+  const line_items = items.map((i: any) => ({
+    price_data: {
+      currency: "usd",
+      product_data: { name: i.name, images: i.image ? [i.image] : [] },
+      unit_amount: Math.round(Number(i.price) * 100),
+    },
+    quantity: Number(i.qty),
+  }));
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items,
+    success_url: `${process.env.NEXT_PUBLIC_URL}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_URL}/carrito`,
+  });
+
+  return NextResponse.json({ url: session.url });
+}
+EOF
+
+# ==============================================
+# 13) NextAuth instalación mínima (credenciales)
+# ==============================================
+mkdir -p src/app/api/auth/[...nextauth]
+cat > src/app/api/auth/[...nextauth]/route.ts << 'EOF'
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcrypt";
+
+const handler = NextAuth({
+  providers: [
+    Credentials({
+      name: "Credenciales",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Contraseña", type: "password" },
+      },
+      async authorize(credentials) {
+        // Demo: usuario hardcodeado (reemplazar por DB con Prisma)
+        const demoUser = { id: "admin-1", email: "admin@vesperum.io", name: "Admin", role: "ADMIN", passwordHash: await bcrypt.hash("admin123", 10) };
+        if (credentials?.email === demoUser.email && await bcrypt.compare(credentials.password ?? "", demoUser.passwordHash)) {
+          return { id: demoUser.id, email: demoUser.email, name: demoUser.name, role: demoUser.role };
+        }
+        return null;
+      },
+    }),
+  ],
+  session: { strategy: "jwt" },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.role = (user as any).role ?? "CUSTOMER";
+      return token;
+    },
+    async session({ session, token }) {
+      (session as any).role = token.role;
+      return session;
+    },
+  },
+});
+
+export { handler as GET, handler as POST };
+EOF
+
+# ======================================================
+# 14) Middleware para proteger /admin (si se agrega luego)
+# ======================================================
+cat > src/middleware.ts << 'EOF'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function middleware(req: NextRequest) {
+  // Ejemplo simple (mejor integrar NextAuth token/role):
+  if (req.nextUrl.pathname.startsWith("/admin")) {
+    // Aquí deberías validar sesión/role. Por ahora, redirige al home.
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};
+EOF
+
+# ==========================================
+# 15) Ajuste tsconfig para alias "@/*" (si falta)
+# ==========================================
+cat > tsconfig.json << 'EOF'
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+EOF
+
+# ============================
+# 16) Levantar el proyecto dev
+# ============================
+npm run dev
