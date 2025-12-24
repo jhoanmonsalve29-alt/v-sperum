@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Catálogo — vésperum</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="index.html">vésperum</a>
+    <nav class="nav">
+      <a class="nav-item" href="catalogo.html">Catálogo</a>
+      <a class="nav-item" href="novedades.html">Novedades</a>
+      <a class="nav-item" href="contacto.html">Contacto</a>
+    </nav>
+    <div class="actions">
+      <input id="search" class="search" type="search" placeholder="Buscar productos..." />
+      <a class="icon-btn" href="checkout.html">🛒 <span id="cartCount">0</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section-head">
+      <h2>Catálogo</h2>
+      <div style="display:flex; gap:8px; align-items:center">
+        <select id="fCategoria">
+          <option value="">Todas las categorías</option>
+          <option value="running">Running</option>
+          <option value="training">Training</option>
+          <option value="lifestyle">Lifestyle</option>
+          <option value="camisetas">Camisetas</option>
+        </select>
+        <select id="fGenero">
+          <option value="">Todos</option>
+          <option value="hombre">Hombre</option>
+          <option value="mujer">Mujer</option>
+        </select>
+      </div>
+    </section>
+    <div id="catalogGrid" class="product-grid"></div>
+  </main>
+
+  <footer class="footer">
+    <div class="footbar">
+      <small>© vésperum.</small>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script>
+    const grid = document.getElementById('catalogGrid');
+    const fCat = document.getElementById('fCategoria');
+    const fGen = document.getElementById('fGenero');
+    const cartCount = document.getElementById('cartCount');
+    const productos = window.VESPERUM.productos;
+    let cart = JSON.parse(localStorage.getItem('vesperum_cart') || '[]');
+    updateCartCount();
+
+    function render() {
+      const cat = fCat.value;
+      const gen = fGen.value;
+      const filtered = productos.filter(p =>
+        (cat ? p.categoria === cat : true) &&
+        (gen ? p.genero === gen : true)
+      );
+      grid.innerHTML = filtered.map(cardProducto).join('');
+    }
+
+    function cardProducto(p) {
+      return `
+        <article class="product-card">
+          <div class="thumb"><img src="${p.imagen}" alt="${p.titulo}"></div>
+          <div class="info">
+            <div class="title">${p.titulo}</div>
+            <div class="price">${p.precio} ${p.moneda}</div>
+            <div class="labels">${(p.etiquetas||[]).map(l => `<span class="label">${l}</span>`).join('')}</div>
+            <div style="margin-top:8px">
+              <a class="btn" href="producto.html?id=${p.id}">Ver</a>
+              <button class="icon-btn" onclick="addToCart('${p.id}')">Agregar</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function addToCart(id) {
+      cart.push(id);
+      localStorage.setItem('vesperum_cart', JSON.stringify(cart));
+      updateCartCount();
+    }
+
+    function updateCartCount() {
+      if (cartCount) cartCount.textContent = cart.length;
+    }
+
+    fCat.addEventListener('change', render);
+    fGen.addEventListener('change', render);
+    render();
+  </script>
+</body>
+</html>
