@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Producto — vésperum</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="index.html">vésperum</a>
+    <nav class="nav">
+      <a class="nav-item" href="catalogo.html">Catálogo</a>
+      <a class="nav-item" href="novedades.html">Novedades</a>
+      <a class="nav-item" href="contacto.html">Contacto</a>
+    </nav>
+    <div class="actions">
+      <a class="icon-btn" href="checkout.html">🛒 <span id="cartCount">0</span></a>
+    </div>
+  </header>
+
+  <main style="padding:24px">
+    <div id="product"></div>
+  </main>
+
+  <footer class="footer">
+    <div class="footbar">
+      <small>© vésperum.</small>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const p = window.VESPERUM.productos.find(x => x.id === id);
+    const container = document.getElementById('product');
+    const cartCount = document.getElementById('cartCount');
+    let cart = JSON.parse(localStorage.getItem('vesperum_cart') || '[]');
+    updateCartCount();
+
+    function updateCartCount() { if (cartCount) cartCount.textContent = cart.length; }
+    function addToCart(id) {
+      cart.push(id);
+      localStorage.setItem('vesperum_cart', JSON.stringify(cart));
+      updateCartCount();
+    }
+
+    if (!p) {
+      container.innerHTML = "<p>Producto no encontrado.</p>";
+    } else {
+      container.innerHTML = `
+        <section style="display:grid; grid-template-columns: 1fr 1fr; gap:24px">
+          <div><img src="${p.imagen}" alt="${p.titulo}" /></div>
+          <div>
+            <h1>${p.titulo}</h1>
+            <p style="color:var(--muted)">${p.descripcion}</p>
+            <p class="price" style="font-weight:700">${p.precio} ${p.moneda}</p>
+            <div style="margin:8px 0">
+              <label>Talla:</label>
+              <select>${p.tallas.map(t => `<option>${t}</option>`).join('')}</select>
+            </div>
+            <div style="margin:8px 0">
+              <label>Color:</label>
+              <select>${p.colores.map(c => `<option>${c}</option>`).join('')}</select>
+            </div>
+            <button class="btn" onclick="addToCart('${p.id}')">Agregar al carrito</button>
+          </div>
+        </section>
+      `;
+    }
+  </script>
+</body>
+</html>
