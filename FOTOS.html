@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>fotos de los bro · galería</title>
+  <style>
+    /* ----- RESET & BASE ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f1f3f7;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      color: #1e2a32;
+      line-height: 1.4;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Contenedor principal */
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 2rem;
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.02);
+      overflow: hidden;
+    }
+
+    /* Secciones interiores */
+    .section {
+      padding: 2rem 2rem;
+      border-bottom: 1px solid #eff2f8;
+    }
+    .section:last-child {
+      border-bottom: none;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 500;
+      color: #8c9bb0;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .section-title span {
+      background: #f0f2f8;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #5b6e8e;
+    }
+
+    /* Cabecera con logo / título personalizado */
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: #ffffff;
+      padding: 1.8rem 2rem 1rem 2rem;
+    }
+    .title-group h1 {
+      font-size: 2rem;
+      font-weight: 460;
+      letter-spacing: -0.3px;
+      color: #1f2b38;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    /* Logo tipográfico personalizado "fotos de los bro" */
+    .logo-bro {
+      background: linear-gradient(135deg, #2c3e50, #3a5a7a);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      font-weight: 520;
+      letter-spacing: -0.2px;
+      position: relative;
+    }
+    .title-group p {
+      font-size: 0.8rem;
+      color: #8698ae;
+      font-weight: 400;
+      margin-top: 0.2rem;
+      border-left: 2px solid #dce3ec;
+      padding-left: 0.6rem;
+    }
+    .stats-card {
+      background: #f8fafd;
+      border-radius: 2rem;
+      padding: 0.5rem 1.2rem;
+      text-align: right;
+      border: 0.5px solid #eef2f8;
+    }
+    .stats-number {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #2c3f55;
+      line-height: 1.2;
+    }
+    .stats-label {
+      font-size: 0.7rem;
+      font-weight: 450;
+      color: #9aaebe;
+      letter-spacing: 0.3px;
+    }
+
+    /* Zona de subida elegante */
+    .upload-area {
+      background: #fbfdff;
+      border-radius: 1.5rem;
+      border: 1px dashed #dce3ec;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+    .upload-area.drag-over {
+      background: #f5f9ff;
+      border-color: #9aafcc;
+      border-style: solid;
+      transform: scale(0.99);
+    }
+    .upload-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .upload-symbol {
+      font-size: 2rem;
+      font-weight: 200;
+      color: #b7c2d4;
+      letter-spacing: 4px;
+    }
+    .upload-area p {
+      font-weight: 450;
+      color: #2b3b4f;
+      font-size: 0.95rem;
+    }
+    .upload-hint {
+      font-size: 0.7rem;
+      color: #99a9c0;
+    }
+    .btn-elegant {
+      background: #ffffff;
+      border: 0.8px solid #dce3ec;
+      padding: 0.6rem 1.6rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #2d4059;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 0.25rem;
+    }
+    .btn-elegant:hover {
+      background: #f4f7fd;
+      border-color: #b7c4db;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Barra de acciones */
+    .actions-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1.2rem;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 0.5px solid #e2e8f2;
+      padding: 0.4rem 1.2rem;
+      border-radius: 32px;
+      font-size: 0.75rem;
+      font-weight: 450;
+      color: #6f7f98;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-outline:hover {
+      background: #fef7f5;
+      border-color: #cfc9c2;
+      color: #b1624b;
+    }
+
+    /* Galería grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 1.6rem;
+    }
+    .photo-card {
+      background: #ffffff;
+      border-radius: 1.2rem;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+      box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.04);
+      border: 0.5px solid #edf2f9;
+    }
+    .photo-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 28px -14px rgba(0, 0, 0, 0.12);
+      border-color: #e6ecf5;
+    }
+    .image-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fafcff;
+      overflow: hidden;
+    }
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+    .photo-card:hover .image-container img {
+      transform: scale(1.02);
+    }
+    .card-footer {
+      padding: 0.7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border-top: 0.5px solid #f0f4fa;
+    }
+    .photo-name {
+      font-size: 0.7rem;
+      font-weight: 470;
+      color: #5f7392;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+    }
+    .delete-photo {
+      background: transparent;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 30px;
+      color: #a4b3ca;
+      transition: all 0.2s;
+      font-weight: 400;
+    }
+    .delete-photo:hover {
+      background: #fef2f0;
+      color: #c2685a;
+    }
+
+    /* Mensaje vacío */
+    .empty-grace {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: #fbfdff;
+      border-radius: 1.8rem;
+      color: #96a6bf;
+      font-weight: 400;
+      border: 0.5px dashed #dfe6f0;
+    }
+    .empty-grace p {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    /* Info stats extra */
+    .info-stats {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafcff;
+      border-radius: 1rem;
+      padding: 0.8rem 1rem;
+      margin-top: 0.5rem;
+    }
+    .info-item {
+      font-size: 0.75rem;
+      color: #7285a2;
+      display: flex;
+      gap: 0.5rem;
+      align-items: baseline;
+    }
+    .info-value {
+      font-weight: 500;
+      color: #2f4562;
+      font-size: 0.85rem;
+    }
+
+    /* Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2c3e4e;
+      color: #f1f5f9;
+      padding: 0.6rem 1.6rem;
+      border-radius: 60px;
+      font-size: 0.75rem;
+      font-weight: 450;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      background: rgba(30, 45, 60, 0.92);
+      transition: opacity 0.2s, transform 0.2s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    footer {
+      background: #ffffff;
+      padding: 1.2rem 2rem;
+      font-size: 0.65rem;
+      text-align: center;
+      color: #95a9c2;
+      border-top: 0.5px solid #eef2f8;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+      .section {
+        padding: 1.2rem;
+      }
+      .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.2rem;
+      }
+      .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <!-- Cabecera con LOGO / TÍTULO: "fotos de los bro" -->
+  <div class="header-section">
+    <div class="title-group">
+      <h1>
+        <span class="logo-bro">fotos de los bro</span>
+      </h1>
+      <p>comparte, organiza, recuerda</p>
+    </div>
+    <div class="stats-card">
+      <div class="stats-number" id="photoCounter">0</div>
+      <div class="stats-label">imágenes</div>
+    </div>
+  </div>
+
+  <!-- Sección 1: Añadir imágenes -->
+  <div class="section">
+    <div class="section-title">
+      <span>✦ subir</span> AÑADIR FOTOS
+    </div>
+    <div class="upload-area" id="dropZone">
+      <div class="upload-content">
+        <div class="upload-symbol">◈ ◈ ◈</div>
+        <p>Arrastra tus fotos aquí o haz clic para seleccionar</p>
+        <div class="upload-hint">jpg, png, webp, gif · hasta 10 MB</div>
+        <button class="btn-elegant" id="selectBtn" type="button">Seleccionar archivos</button>
+        <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/gif,image/webp,image/bmp" style="display: none;">
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="btn-outline" id="clearAllBtn" type="button">Eliminar todas</button>
+    </div>
+  </div>
+
+  <!-- Sección 2: Galería -->
+  <div class="section">
+    <div class="section-title">
+      <span>✧ galería</span> MOMENTOS CAPTURADOS
+    </div>
+    <div class="gallery-grid" id="galleryContainer"></div>
+    
+    <!-- estadísticas de almacenamiento -->
+    <div class="info-stats" id="infoStats" style="margin-top: 1.8rem;">
+      <div class="info-item">Volumen total</div>
+      <div class="info-value" id="totalSizeSpan">0 KB</div>
+    </div>
+  </div>
+
+  <footer>Las fotos se mantienen solo durante tu sesión · al recargar se descartan</footer>
+</div>
+
+<div id="toastMessage" class="toast-msg"></div>
+
+<script>
+  (function() {
+    // Elementos
+    const galleryGrid = document.getElementById('galleryContainer');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const selectBtn = document.getElementById('selectBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const photoCounterSpan = document.getElementById('photoCounter');
+    const totalSizeSpan = document.getElementById('totalSizeSpan');
+    
+    const MAX_SIZE_MB = 10;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    
+    let currentImagesSize = 0; // bytes
+    
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 KB';
+      const k = 1024;
+      const sizes = ['KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    function updateTotalSizeUI() {
+      totalSizeSpan.textContent = formatBytes(currentImagesSize);
+    }
+    
+    let toastTimeout = null;
+    function showMessage(text, isError = false) {
+      const toast = document.getElementById('toastMessage');
+      toast.textContent = text;
+      toast.style.background = isError ? 'rgba(170, 100, 80, 0.94)' : 'rgba(30, 45, 60, 0.94)';
+      toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+    
+    function revokeImage(imgElement) {
+      if (imgElement && imgElement.src && imgElement.src.startsWith('blob:')) {
+        URL.revokeObjectURL(imgElement.src);
+      }
+    }
+    
+    function updateGalleryCounter() {
+      const allCards = galleryGrid.querySelectorAll('.photo-card');
+      const total = allCards.length;
+      photoCounterSpan.textContent = total;
+      toggleEmptyMessage(total);
+    }
+    
+    function toggleEmptyMessage(total) {
+      const existingEmpty = galleryGrid.querySelector('.empty-grace');
+      if (total === 0) {
+        if (!existingEmpty) {
+          const emptyDiv = document.createElement('div');
+          emptyDiv.className = 'empty-grace';
+          emptyDiv.innerHTML = `<span>◌ ◌ ◌</span><p>La galería está vacía</p><small>Sube tus primeras fotos de los bro</small>`;
+          galleryGrid.appendChild(emptyDiv);
+        }
+      } else {
+        if (existingEmpty) existingEmpty.remove();
+      }
+    }
+    
+    function deletePhotoCard(card) {
+      const img = card.querySelector('.image-container img');
+      const sizeAttr = card.getAttribute('data-size');
+      if (sizeAttr) {
+        const fileSize = parseInt(sizeAttr, 10);
+        if (!isNaN(fileSize)) {
+          currentImagesSize = Math.max(0, currentImagesSize - fileSize);
+          updateTotalSizeUI();
+        }
+      }
+      if (img) revokeImage(img);
+      card.remove();
+      updateGalleryCounter();
+      showMessage('Foto eliminada', false);
+    }
+    
+    function addImageToGallery(file) {
+      if (!file.type.startsWith('image/')) {
+        showMessage(`"${file.name}" no es una imagen válida`, true);
+        return false;
+      }
+      if (file.size > MAX_SIZE_BYTES) {
+        const mb = (file.size / (1024 * 1024)).toFixed(1);
+        showMessage(`"${file.name}" excede ${MAX_SIZE_MB} MB (${mb} MB)`, true);
+        return false;
+      }
+      
+      const objectURL = URL.createObjectURL(file);
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      card.setAttribute('data-size', file.size);
+      
+      const imgWrapper = document.createElement('div');
+      imgWrapper.className = 'image-container';
+      const img = document.createElement('img');
+      img.src = objectURL;
+      img.alt = file.name;
+      img.loading = 'lazy';
+      img.onerror = () => {
+        showMessage(`Error al cargar "${file.name}"`, true);
+        revokeImage(img);
+        card.remove();
+        currentImagesSize = Math.max(0, currentImagesSize - file.size);
+        updateTotalSizeUI();
+        updateGalleryCounter();
+      };
+      imgWrapper.appendChild(img);
+      
+      const footerDiv = document.createElement('div');
+      footerDiv.className = 'card-footer';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'photo-name';
+      let displayName = file.name.length > 26 ? file.name.slice(0, 23) + '…' : file.name;
+      nameSpan.textContent = displayName;
+      nameSpan.title = file.name;
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-photo';
+      deleteBtn.textContent = '✕';
+      deleteBtn.setAttribute('aria-label', 'Eliminar');
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deletePhotoCard(card);
+      });
+      
+      footerDiv.appendChild(nameSpan);
+      footerDiv.appendChild(deleteBtn);
+      card.appendChild(imgWrapper);
+      card.appendChild(footerDiv);
+      
+      const emptyMsg = galleryGrid.querySelector('.empty-grace');
+      if (emptyMsg) emptyMsg.remove();
+      
+      galleryGrid.prepend(card);
+      currentImagesSize += file.size;
+      updateTotalSizeUI();
+      updateGalleryCounter();
+      return true;
+    }
+    
+    function processFiles(files) {
+      if (!files || files.length === 0) return;
+      let added = 0;
+      let errors = 0;
+      const fileArray = Array.from(files);
+      for (const file of fileArray) {
+        const ok = addImageToGallery(file);
+        if (ok) added++;
+        else errors++;
+      }
+      if (added > 0) {
+        showMessage(`${added} ${added === 1 ? 'foto añadida' : 'fotos añadidas'} a la galería`);
+      }
+      if (errors > 0 && added === 0) {
+        showMessage('No se pudo agregar ninguna foto. Verifica formato o peso.', true);
+      }
+    }
+    
+    function clearAllImages() {
+      const allCards = galleryGrid.querySelectorAll('.photo-card');
+      if (allCards.length === 0) {
+        showMessage('La galería ya está vacía', false);
+        return;
+      }
+      if (confirm('Eliminar todas las fotos de los bro? Esta acción es irreversible.')) {
+        allCards.forEach(card => {
+          const imgElem = card.querySelector('.image-container img');
+          if (imgElem) revokeImage(imgElem);
+          card.remove();
+        });
+        currentImagesSize = 0;
+        updateTotalSizeUI();
+        updateGalleryCounter();
+        showMessage('Galería completamente limpia', false);
+      }
+    }
+    
+    // DRAG & DROP
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+      dropZone.addEventListener(ev, preventDefaults, false);
+    });
+    ['dragenter', 'dragover'].forEach(ev => {
+      dropZone.addEventListener(ev, () => dropZone.classList.add('drag-over'));
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+      dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over'));
+    });
+    dropZone.addEventListener('drop', (e) => {
+      const dtFiles = e.dataTransfer.files;
+      if (dtFiles && dtFiles.length) processFiles(dtFiles);
+      else showMessage('No se detectaron archivos', false);
+    });
+    
+    dropZone.addEventListener('click', (e) => {
+      if (e.target === selectBtn || selectBtn.contains(e.target)) return;
+      fileInput.click();
+    });
+    selectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length) {
+        processFiles(fileInput.files);
+      }
+      fileInput.value = '';
+    });
+    
+    clearAllBtn.addEventListener('click', clearAllImages);
+    
+    window.addEventListener('dragover', (e) => {
+      if (!dropZone.contains(e.target)) e.preventDefault();
+    });
+    window.addEventListener('drop', (e) => {
+      if (!dropZone.contains(e.target)) {
+        e.preventDefault();
+        showMessage('Suelta las imágenes solo en el área de subida', false);
+      }
+    });
+    
+    // Inicialización
+    updateGalleryCounter();
+    updateTotalSizeUI();
+    showMessage('Sube tus fotos, bro', false);
+  })();
+</script>
+</body>
+</html>
